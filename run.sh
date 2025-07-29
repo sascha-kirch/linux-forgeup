@@ -35,6 +35,7 @@ if [ ! -f "packages.conf" ]; then
 fi
 
 source packages.conf
+source dotfiles.conf
 
 # Update the system first
 echo "Updating system..."
@@ -65,6 +66,7 @@ install_packages "${FONTS[@]}"
 echo "Installing other packages..."
 install_starship_prompt
 install_lazydocker
+setup_tmux
 
 # Enable services
 echo "Configuring services..."
@@ -76,5 +78,8 @@ for service in "${SERVICES[@]}"; do
     echo "$service is already enabled"
   fi
 done
+
+setup_dotfiles
+stow_dotfiles "${DOTFILES_TO_STOW[@]}"
 
 echo "Setup complete! You may want to reboot your system."

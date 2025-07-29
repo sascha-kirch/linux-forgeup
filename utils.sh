@@ -42,8 +42,96 @@ install_starship_prompt() {
 }
 
 install_lazydocker() {
-    echo "Installing lazydocker..."
-    curl -sS https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+
+    LAZYDOCKER_DIR="$HOME/.local/bin"
+
+    if [ -d "$LAZYDOCKER_DIR" ]; then
+        echo "TPM is already installed in $LAZYDOCKER_DIR"
+    else
+        echo "Installing lazydocker..."
+        curl -sS https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+    fi
 
     # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
+}
+
+
+install_tmux_plugin_manager() {
+
+    if ! is_installed tmux; then
+        echo "tmux is not installed."
+        exit 1
+    fi
+
+    TPM_DIR="$HOME/.tmux/plugins/tpm"
+
+    # Check if TPM is already installed
+    if [ -d "$TPM_DIR" ]; then
+        echo "TPM is already installed in $TPM_DIR"
+    else
+        echo "Installing Tmux Plugin Manager (TPM)..."
+        git clone https://github.com/tmux-plugins/tpm $TPM_DIR
+    fi
+
+    echo "TPM installed successfully!"
+}
+
+install_tmux_catppuccin(){
+    CATPPUCCIN_DIR=~/.config/tmux/plugins/catppuccin
+
+    if [ -d "$TPM_DIR" ]; then
+        echo "Catppuccin is already installed in $CATPPUCCIN_DIR"
+    else
+        echo "Installing Tmux Catppuccin theme..."
+        mkdir -p $CATPPUCCIN_DIR
+        git clone -b v2.1.3 https://github.com/catppuccin/tmux.git $CATPPUCCIN_DIR/tmux
+    fi
+}
+
+# When seting up tmux there is some manual cloning of repositories involved. The dotfiles are not managed by GNU Stow
+setup_tmux(){
+    install_tmux_plugin_manager
+    install_tmux_catppuccin
+}
+
+setup_dotfiles() {
+    echo "Setting up dotfiles..."
+
+    DOTFILES_REPO_NAME="dotfiles"
+    DOTFILES_REPO="https://github.com/sascha-kirch/$DOTFILES_REPO_NAME.git"
+    DOTFILES_DIR="$HOME/$DOTFILES_REPO_NAME"
+
+    source dotfiles.conf
+
+    if ! is_installed stow; then
+        echo "Install stow first"
+        exit 1
+    fi
+
+    # Check if the repository already exists
+    if [ -d "$DOTFILES_DIR" ]; then
+        echo "Directory '$DOTFILES_DIR' already exists. Skipping clone"
+    else
+        git clone "$DOTFILES_REPO"
+    fi
+
+    # Check if the clone was successful
+    if [ $? -eq 0 ]; then
+        echo "Cloning the repository was successful."
+    else
+        echo "Failed to clone the repository."
+        exit 1
+    fi
+}
+
+
+stow_dotfiles() {
+    local dotfiles=("$@")
+
+    if [ ${#dotfiles[@]} -ne 0 ]; then
+        echo "Stowing dotfiles: ${dotfiles[*]}"
+        stow -R "${dotfiles[@]}"
+    else
+        echo "No dotfiles to be stowed."
+    fi
 }
