@@ -62,6 +62,9 @@ install_packages "${MEDIA[@]}"
 echo "Installing fonts..."
 install_packages "${FONTS[@]}"
 
+echo "Installing other packages..."
+install_starship_prompt
+
 # Enable services
 echo "Configuring services..."
 for service in "${SERVICES[@]}"; do
