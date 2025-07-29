@@ -128,10 +128,15 @@ setup_dotfiles() {
 stow_dotfiles() {
     local dotfiles=("$@")
 
+    pushd "$HOME/dotfiles"
+
     if [ ${#dotfiles[@]} -ne 0 ]; then
         echo "Stowing dotfiles: ${dotfiles[*]}"
         stow -R "${dotfiles[@]}"
     else
         echo "No dotfiles to be stowed."
     fi
+
+    popd
+    echo "Dotfiles stowed successfully."
 }
