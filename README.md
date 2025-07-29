@@ -1,6 +1,12 @@
 # linux-forgeup
 Linux System Tool to automate setup and configuration of my debian based linux distros
 
+# Functionality
+- Installs packages with apt
+- installs custom packages from git repositories (lazydocker, starship, tmux plugins)
+- enables and starts services
+- clones my dotfiles from [https://github.com/sascha-kirch/dotfiles](https://github.com/sascha-kirch/dotfiles) and stows them
+
 # Installion
 
 1. Clone this repository:
