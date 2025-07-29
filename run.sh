@@ -64,6 +64,7 @@ install_packages "${FONTS[@]}"
 
 echo "Installing other packages..."
 install_starship_prompt
+install_lazydocker
 
 # Enable services
 echo "Configuring services..."

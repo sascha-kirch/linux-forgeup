@@ -40,3 +40,10 @@ install_starship_prompt() {
         echo "Starship prompt is already installed."
     fi
 }
+
+install_lazydocker() {
+    echo "Installing lazydocker..."
+    curl -sS https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+
+    # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
+}
