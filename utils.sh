@@ -49,7 +49,7 @@ install_lazydocker() {
         echo "TPM is already installed in $LAZYDOCKER_DIR"
     else
         echo "Installing lazydocker..."
-        curl -sS https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh)"
     fi
 
     # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
