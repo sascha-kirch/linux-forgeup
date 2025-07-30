@@ -106,7 +106,7 @@ install_tmux_plugin_manager() {
 install_tmux_catppuccin(){
     CATPPUCCIN_DIR=~/.config/tmux/plugins/catppuccin
 
-    if [ -d "$TPM_DIR" ]; then
+    if [ -d "$CATPPUCCIN_DIR" ]; then
         echo "Catppuccin is already installed in $CATPPUCCIN_DIR"
     else
         echo "Installing Tmux Catppuccin theme..."
