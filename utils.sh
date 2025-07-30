@@ -43,6 +43,12 @@ install_starship_prompt() {
 
     # Reminder: Don't append to .bashrc if you're using GNU Stow
     echo 'Remember to add: eval "$(starship init bash)" to your stowed .bashrc'
+
+    # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
+    # echo 'eval "$(starship init bash)"' >> ~/.bashrc
+
+    # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
+    # starship preset catppuccin-powerline -o ~/.config/starship.toml
 }
 
 # install_starship_prompt() {
@@ -133,7 +139,7 @@ setup_dotfiles() {
     if [ -d "$DOTFILES_DIR" ]; then
         echo "Directory '$DOTFILES_DIR' already exists. Skipping clone"
     else
-        git clone "$DOTFILES_REPO"
+        git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
     fi
 
     # Check if the clone was successful
