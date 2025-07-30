@@ -25,25 +25,46 @@ install_packages() {
 }
 
 install_starship_prompt() {
-    if ! is_installed "starship"; then
-        echo "Installing Starship prompt..."
-        sudo sh -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
+    local install_dir="$HOME/.local/bin"
+    local binary_path="$install_dir/starship"
 
-        # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
-        #echo 'eval "$(starship init bash)"' >> ~/.bashrc
-
-        # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
-        # starship preset catppuccin-powerline -o ~/.config/starship.toml
-
-        echo "Starship prompt installed successfully."
+    if [ -f "$binary_path" ]; then
+        echo "Starship is already installed at $binary_path"
     else
-        echo "Starship prompt is already installed."
+        echo "Installing Starship..."
+        mkdir -p "$install_dir"
+
+        curl -sSL https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-musl.tar.gz \
+            | tar -xz -C "$install_dir"
+
+        chmod +x "$binary_path"
+        echo "Starship installed to $binary_path"
     fi
+
+    # Reminder: Don't append to .bashrc if you're using GNU Stow
+    echo 'Remember to add: eval "$(starship init bash)" to your stowed .bashrc'
 }
+
+# install_starship_prompt() {
+#     if ! is_installed "starship"; then
+#         echo "Installing Starship prompt..."
+#         sudo bash --posix -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
+
+#         # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
+#         #echo 'eval "$(starship init bash)"' >> ~/.bashrc
+
+#         # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
+#         # starship preset catppuccin-powerline -o ~/.config/starship.toml
+
+#         echo "Starship prompt installed successfully."
+#     else
+#         echo "Starship prompt is already installed."
+#     fi
+# }
 
 install_lazydocker() {
 
-    LAZYDOCKER_DIR="$HOME/.local/bin"
+    LAZYDOCKER_DIR="$HOME/.local/bin/lazydocker"
 
     if [ -d "$LAZYDOCKER_DIR" ]; then
         echo "TPM is already installed in $LAZYDOCKER_DIR"
