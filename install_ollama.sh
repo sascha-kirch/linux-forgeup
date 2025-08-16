@@ -1,0 +1,25 @@
+#!/bin/bash
+
+echo "Installing/Updating ollama..."
+sh -c "$(curl -fsSL https://ollama.com/install.sh)"
+
+
+# Update configs of ollama service
+# Note that the override.conf is merged with the default service file
+OLLAMA_SERVICE_DIR="/etc/systemd/system/ollama.service.d"
+
+if [ ! -d "$OLLAMA_SERVICE_DIR" ]; then
+    echo "Creating directory for ollama service overrides..."
+    sudo mkdir -p "$OLLAMA_SERVICE_DIR"
+else
+    echo "Directory for ollama service overrides already exists."
+fi
+
+
+# using tee to be able to combine it with sudo
+echo "[Service]" | sudo tee $OLLAMA_SERVICE_DIR/override.conf # this will overwrite an existing file
+echo "Environment=\"https_proxy=$HTTP_PROXY\"" | sudo tee -a $OLLAMA_SERVICE_DIR/override.conf # -a for appending
+
+# restart service
+sudo systemctl daemon-reload
+sudo systemctl restart ollama.service
