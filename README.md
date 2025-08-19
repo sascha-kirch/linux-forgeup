@@ -19,6 +19,19 @@ git clone https://github.com/sascha-kirch/linux-forgeup.git
 ./run.sh
 ```
 
+# Manual Setup
+Inside ~/.bashrc, add the following lines to source additional configs:
+```bash
+# Source additional configs
+if [ -d ~/.bashrc.d ]; then
+    for file in ~/.bashrc.d/*.sh; do
+        if [ -f "$file" ]; then
+        source "$file"
+        fi
+    done
+fi
+```
+
 # Kudos
 Big thanks to the following projects for inspiration and code snippets:
 - [crucible by typecraft](https://github.com/typecraft-dev/crucible)
