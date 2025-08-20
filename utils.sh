@@ -99,7 +99,7 @@ install_tmux_catppuccin(){
 }
 
 install_fzf(){
-    local VERSION="${1:-'0.65.1'}" # Default version if not provided
+    local VERSION="${1:-0.65.1}" # Default version if not provided
     local INSTALL_DIR="$HOME/.local/bin"
 
     mkdir -p "$INSTALL_DIR"
