@@ -20,11 +20,26 @@ git clone https://github.com/sascha-kirch/linux-forgeup.git
 ```
 
 # Manual Setup
-Inside ~/.bashrc, add the following lines to source additional configs:
+
+## .bashrc
+Inside ~/.bashrc,  the following lines to source additional configs:
 ```bash
 # Source additional configs
 if [ -d ~/.bashrc.d ]; then
     for file in ~/.bashrc.d/*.sh; do
+        if [ -f "$file" ]; then
+        source "$file"
+        fi
+    done
+fi
+```
+
+## .profile
+Inside ~/.profile, add the following lines to source additional configs:
+```bash
+# Source additional configs
+if [ -d ~/.profile.d ]; then
+    for file in ~/.profile.d/*.sh; do
         if [ -f "$file" ]; then
         source "$file"
         fi
