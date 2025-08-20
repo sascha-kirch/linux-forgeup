@@ -102,6 +102,8 @@ install_fzf(){
     local VERSION="${1:-'0.65.1'}" # Default version if not provided
     local INSTALL_DIR="$HOME/.local/bin"
 
+    mkdir -p "$INSTALL_DIR"
+
     if [ -d "$INSTALL_DIR/fzf" ]; then
         echo "fzf is already installed in $INSTALL_DIR/fzf"
         return
@@ -109,6 +111,11 @@ install_fzf(){
 
     curl -L https://github.com/junegunn/fzf/releases/download/v$VERSION/fzf-$VERSION-linux_amd64.tar.gz \
     | tar -xz -C $INSTALL_DIR
+
+    if [ $? -ne 0 ]; then
+        echo "Failed to download or extract fzf."
+        return
+    fi
 
     echo "fzf version $VERSION installed successfully to $INSTALL_DIR/fzf"
 }
