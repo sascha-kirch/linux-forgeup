@@ -45,28 +45,11 @@ install_starship_prompt() {
     echo 'Remember to add: eval "$(starship init bash)" to your stowed .bashrc'
 
     # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
-    # echo 'eval "$(starship init bash)"' >> ~/.bashrc
+    echo 'eval "$(starship init bash)"' >> ~/.bashrc
 
     # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
     # starship preset catppuccin-powerline -o ~/.config/starship.toml
 }
-
-# install_starship_prompt() {
-#     if ! is_installed "starship"; then
-#         echo "Installing Starship prompt..."
-#         sudo bash --posix -c "$(curl -fsSL https://starship.rs/install.sh)" -- --yes
-
-#         # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
-#         #echo 'eval "$(starship init bash)"' >> ~/.bashrc
-
-#         # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
-#         # starship preset catppuccin-powerline -o ~/.config/starship.toml
-
-#         echo "Starship prompt installed successfully."
-#     else
-#         echo "Starship prompt is already installed."
-#     fi
-# }
 
 install_lazydocker() {
 
@@ -113,6 +96,21 @@ install_tmux_catppuccin(){
         mkdir -p $CATPPUCCIN_DIR
         git clone -b v2.1.3 https://github.com/catppuccin/tmux.git $CATPPUCCIN_DIR/tmux
     fi
+}
+
+install_fzf(){
+    local VERSION="${1:-'0.65.1'}" # Default version if not provided
+    local INSTALL_DIR="$HOME/.local/bin"
+
+    if [ -d "$INSTALL_DIR/fzf" ]; then
+        echo "fzf is already installed in $INSTALL_DIR/fzf"
+        return
+    fi
+
+    curl -L https://github.com/junegunn/fzf/releases/download/v$VERSION/fzf-$VERSION-linux_amd64.tar.gz \
+    | tar -xz -C $INSTALL_DIR
+
+    echo "fzf version $VERSION installed successfully to $INSTALL_DIR/fzf"
 }
 
 # When seting up tmux there is some manual cloning of repositories involved. The dotfiles are not managed by GNU Stow
