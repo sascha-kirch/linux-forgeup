@@ -45,7 +45,7 @@ install_starship_prompt() {
     echo 'Remember to add: eval "$(starship init bash)" to your stowed .bashrc'
 
     # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
-    echo 'eval "$(starship init bash)"' >> ~/.bashrc
+    # echo 'eval "$(starship init bash)"' >> ~/.bashrc
 
     # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
     # starship preset catppuccin-powerline -o ~/.config/starship.toml
