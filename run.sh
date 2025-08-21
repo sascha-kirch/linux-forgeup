@@ -67,6 +67,7 @@ echo "Installing other packages..."
 install_starship_prompt
 install_lazydocker
 setup_tmux
+install_vim_pluginmanager
 install_fzf
 
 # Enable services

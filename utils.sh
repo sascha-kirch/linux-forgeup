@@ -65,12 +65,23 @@ install_lazydocker() {
     # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
 }
 
+install_vim_pluginmanager() {
+    if ! is_installed vim; then
+        echo "vim is not installed."
+        return
+    fi
+
+    curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+
+}
+
+
 
 install_tmux_plugin_manager() {
 
     if ! is_installed tmux; then
         echo "tmux is not installed."
-        exit 1
+        return
     fi
 
     TPM_DIR="$HOME/.tmux/plugins/tpm"
@@ -137,7 +148,7 @@ setup_dotfiles() {
 
     if ! is_installed stow; then
         echo "Install stow first"
-        exit 1
+        return
     fi
 
     # Check if the repository already exists
@@ -152,7 +163,7 @@ setup_dotfiles() {
         echo "Cloning the repository was successful."
     else
         echo "Failed to clone the repository."
-        exit 1
+        return
     fi
 }
 
