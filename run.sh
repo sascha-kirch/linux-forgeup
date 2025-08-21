@@ -84,4 +84,7 @@ done
 setup_dotfiles
 stow_dotfiles "${DOTFILES_TO_STOW[@]}"
 
+# Install Vim plugins after stowing dotfiles
+install_vim_plugins
+
 echo "Setup complete! You may want to reboot your system."

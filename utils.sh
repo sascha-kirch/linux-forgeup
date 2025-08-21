@@ -75,6 +75,22 @@ install_vim_pluginmanager() {
 
 }
 
+install_vim_plugins() {
+    if ! is_installed vim; then
+        echo "vim is not installed."
+        return
+    fi
+
+    # Check if vim-plug is installed
+    if [ ! -f ~/.vim/autoload/plug.vim ]; then
+        echo "vim-plug is not installed. Please run install_vim_pluginmanager first."
+        return
+    fi
+
+    # Install plugins using vim-plug
+    vim +PlugInstall +qall
+}
+
 
 
 install_tmux_plugin_manager() {
