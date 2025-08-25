@@ -47,6 +47,8 @@ if [ -d ~/.profile.d ]; then
 fi
 ```
 
+> should be added before the line that sources ~/.bashrc, so that the PATH is set correctly before bash is started.
+
 # Kudos
 Big thanks to the following projects for inspiration and code snippets:
 - [crucible by typecraft](https://github.com/typecraft-dev/crucible)
