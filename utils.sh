@@ -51,6 +51,26 @@ install_starship_prompt() {
     # starship preset catppuccin-powerline -o ~/.config/starship.toml
 }
 
+install_navi() {
+    local VERSION="${1:-v2.24.0}" # Default version if not provided
+    local install_dir="$HOME/.local/bin"
+    local binary_path="$install_dir/navi"
+
+    if [ -f "$binary_path" ]; then
+        echo "navi is already installed at $binary_path"
+    else
+        echo "Installing navi..."
+        mkdir -p "$install_dir"
+
+        curl -sSL https://github.com/denisidoro/navi/releases/download/$VERSION/navi-$VERSION-x86_64-unknown-linux-musl.tar.gz \
+            | tar -xz -C "$install_dir"
+
+        chmod +x "$binary_path"
+        echo "navi installed to $binary_path"
+    fi
+
+}
+
 install_lazydocker() {
 
     LAZYDOCKER_DIR="$HOME/.local/bin/lazydocker"

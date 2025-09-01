@@ -69,6 +69,7 @@ install_lazydocker
 setup_tmux
 install_vim_pluginmanager
 install_fzf
+install_navi
 
 # Enable services
 echo "Configuring services..."
