@@ -71,6 +71,29 @@ install_navi() {
 
 }
 
+install_nvim() {
+    # Note that this installs a standalone version of nvim into ~/.local. In contrast to the previous functions
+    # nvim is not a single binary but a directory containing multiple files.
+
+    local VERSION="${1:-v0.11.4}" # Default version if not provided
+    local install_dir="$HOME/.local"
+    local binary_path="$install_dir/nvim-linux-x86_64/bin/nvim"
+
+    if [ -f "$binary_path" ]; then
+        echo "nvim is already installed at $binary_path"
+    else
+        echo "Installing nvim..."
+        mkdir -p "$install_dir"
+
+        curl -LO https://github.com/neovim/neovim/releases/download/$VERSION/nvim-linux-x86_64.tar.gz
+        tar -C "$install_dir" -xzf nvim-linux-x86_64.tar.gz
+
+        chmod +x "$binary_path"
+        echo "nvim installed to $binary_path"
+    fi
+
+}
+
 install_lazydocker() {
 
     LAZYDOCKER_DIR="$HOME/.local/bin/lazydocker"

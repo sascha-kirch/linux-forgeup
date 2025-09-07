@@ -70,6 +70,7 @@ setup_tmux
 install_vim_pluginmanager
 install_fzf
 install_navi
+install_nvim
 
 # Enable services
 echo "Configuring services..."
