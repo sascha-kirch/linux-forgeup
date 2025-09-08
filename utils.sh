@@ -77,19 +77,30 @@ install_nvim() {
 
     local VERSION="${1:-v0.11.4}" # Default version if not provided
     local install_dir="$HOME/.local"
-    local binary_path="$install_dir/nvim-linux-x86_64/bin/nvim"
+    local package_path="$install_dir/nvim-linux-x86_64"
 
-    if [ -f "$binary_path" ]; then
-        echo "nvim is already installed at $binary_path"
+    if [ -d "$package_path" ]; then
+        echo "nvim is already installed at $package_path"
     else
+
+        # remove any preinstalled version (e.g. those coming from ubuntu or apt)
+        if is_installed neovim; then
+            echo "Removing preinstalled neovim package"
+            sudo apt remove -y neovim
+        fi
+
+        if [ -d "/usr/bin/nvim" ]; then
+            echo "Removing preinstalled /usr/bin/nvim"
+            sudo rm -rf /usr/bin/nvim
+        fi
+
         echo "Installing nvim..."
         mkdir -p "$install_dir"
 
         curl -LO https://github.com/neovim/neovim/releases/download/$VERSION/nvim-linux-x86_64.tar.gz
         tar -C "$install_dir" -xzf nvim-linux-x86_64.tar.gz
 
-        chmod +x "$binary_path"
-        echo "nvim installed to $binary_path"
+        echo "nvim installed to $package_path"
     fi
 
 }
