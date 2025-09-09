@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 echo "Installing/Updating ollama..."
 sh -c "$(curl -fsSL https://ollama.com/install.sh)"

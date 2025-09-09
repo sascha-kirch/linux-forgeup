@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Print the logo
 print_logo() {
@@ -26,7 +26,7 @@ print_logo
 set -e
 
 # Source utility functions
-source utils.sh
+source utils
 
 # Source the package list
 if [ ! -f "packages.conf" ]; then

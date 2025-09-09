@@ -16,7 +16,8 @@ git clone https://github.com/sascha-kirch/linux-forgeup.git
 
 2. Run the setup script:
 ```bash
-./run.sh
+chmod +x ./run
+./run
 ```
 
 # Manual Setup
