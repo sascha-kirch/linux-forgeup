@@ -71,13 +71,45 @@ install_navi() {
 
 }
 
+install_ripgrep(){
+    # Note that this installs a standalone version of nvim into ~/.local/packages. In contrast to the previous functions
+    # ripgrep is not a single binary but a directory containing multiple files.
+
+    local VERSION="${1:-14.1.1}" # Default version if not provided
+    local install_dir="$HOME/.local/packages"
+    local package_path="$install_dir/ripgrep"
+
+    local filename="ripgrep-${VERSION}-x86_64-unknown-linux-musl"
+
+    if [ -d "$package_path" ]; then
+        echo "ripgrep is already installed at $package_path"
+    else
+
+        echo "Installing ripgrep..."
+        mkdir -p "$package_path"
+
+        # strip-components flattents the filetree so we get rid of the name of the compressed file.
+        curl -LO https://github.com/BurntSushi/ripgrep/releases/download/${VERSION}/${filename}.tar.gz
+        tar -C "$package_path" --strip-components=1 -xzf ${filename}.tar.gz
+        rm -rf ${filename}.tar.gz
+
+        # create symlink to .local/bin
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$package_path/rg" "$HOME/.local/bin/rg"
+
+        echo "ripgrep installed to $package_path"
+    fi
+
+}
+
 install_nvim() {
     # Note that this installs a standalone version of nvim into ~/.local. In contrast to the previous functions
     # nvim is not a single binary but a directory containing multiple files.
 
     local VERSION="${1:-v0.11.4}" # Default version if not provided
-    local install_dir="$HOME/.local"
-    local package_path="$install_dir/nvim-linux-x86_64"
+    local install_dir="$HOME/.local/packages"
+    local package_path="$install_dir/nvim"
+    local filename="nvim-linux-x86_64"
 
     if [ -d "$package_path" ]; then
         echo "nvim is already installed at $package_path"
@@ -95,11 +127,16 @@ install_nvim() {
         fi
 
         echo "Installing nvim..."
-        mkdir -p "$install_dir"
+        mkdir -p "$package_path"
 
-        curl -LO https://github.com/neovim/neovim/releases/download/$VERSION/nvim-linux-x86_64.tar.gz
-        tar -C "$install_dir" -xzf nvim-linux-x86_64.tar.gz
-        rm -rf nvim-linux-x86_64.tar.gz
+        # strip-components flattents the filetree so we get rid of the name of the compressed file.
+        curl -LO https://github.com/neovim/neovim/releases/download/$VERSION/${filename}.tar.gz
+        tar -C "$package_path" --strip-components=1 -xzf ${filename}.tar.gz
+        rm -rf ${filename}.tar.gz
+
+        # create symlink to .local/bin
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$package_path/bin/nvim" "$HOME/.local/bin/nvim"
 
         echo "nvim installed to $package_path"
     fi
