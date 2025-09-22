@@ -102,6 +102,29 @@ install_ripgrep(){
 
 }
 
+install_rust() {
+    if command -v rustc &> /dev/null; then
+        echo "Rust is already installed."
+    else
+        echo "Installing Rust..."
+
+        # the shell script will launch a guided installer!
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+        source $HOME/.cargo/env
+        echo "Rust installed successfully."
+    fi
+}
+
+uninstall_rust() {
+    if command -v rustc &> /dev/null; then
+        echo "Uninstalling Rust..."
+        rustup self uninstall -y
+        echo "Rust uninstalled successfully."
+    else
+        echo "Rust is not installed."
+    fi
+}
+
 install_nvim() {
     # Note that this installs a standalone version of nvim into ~/.local. In contrast to the previous functions
     # nvim is not a single binary but a directory containing multiple files.
