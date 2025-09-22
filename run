@@ -1,12 +1,108 @@
 #!/usr/bin/env bash
 
-# Exit on any error
 set -e
 
-print_logo
+# Function to display usage information
+usage() {
+    cat << EOF
+Usage: $0 [OPTIONS]
+
+Setup and configure a Linux system with various options.
+
+Options:
+    -u, --update-system    Update and upgrade the system packages. [Requires sudo].
+    -a, --apt-packages     Install APT packages listed in packages.conf. [Requires sudo].
+    -o, --other-packages   Install other packages/tools.
+    -s, --enable-services  Enable and start services listed in services.conf. [Requires sudo].
+    -d, --setup-dotfiles   Setup and stow dotfiles listed in dotfiles from https://github.com/sascha-kirch/dotfiles.
+    -h, --help             Display this help message.
+
+Examples:
+    $0 --update-system --apt-packages --enable-services
+    $0 -u -a -d
+    $0 --help
+EOF
+}
+
 
 # Source utility functions
 source utils
+
+print_logo
+
+# set default configuration
+declare -A config=(
+    [UPDATE_SYSTEM]=false
+    [APT_PACKAGES]=false
+    [OTHER_PACKAGES]=false
+    [ENABLE_SERVICES]=false
+    [SETUP_DOTFILES]=false
+)
+
+# Parse command-line options
+# -- "$@" is used to handle any further positional parameters correctly
+OPTS=$(getopt -o uaosdh --long update-system,apt-packages,other-packages,enable-services,setup-dotfiles,help -n 'linux-forgup::run' -- "$@")
+
+if [ $? -ne 0 ]; then
+    log_error "Failed to parse options" >&2
+    usage
+    exit 1
+fi
+
+# Reset the positional parameters to the parsed options
+eval set -- "$OPTS"
+
+# Process the options
+while true; do
+    case "$1" in
+        -u | --update-system)
+            config[UPDATE_SYSTEM]=true
+            shift
+            ;;
+        -a | --apt-packages)
+            config[APT_PACKAGES]=true
+            shift
+            ;;
+        -o | --other-packages)
+            config[OTHER_PACKAGES]=true
+            shift
+            ;;
+        -s | --enable-services)
+            config[ENABLE_SERVICES]=true
+            shift
+            ;;
+        -d | --setup-dotfiles)
+            config[SETUP_DOTFILES]=true
+            shift
+            ;;
+        -h | --help)
+            usage
+            exit 0
+            ;;
+        --)
+            shift
+            break
+            ;;
+        *)
+            log_error "Internal error!"
+            exit 1
+            ;;
+    esac
+done
+
+# Check if the user has sudo privileges and adjust configuration accordingly
+if [ ! "$(can_sudo)" ]; then
+    log_warning "User $(whoami) is not in sudoers group. Deactivating some features."
+    config[UPDATE_SYSTEM]=false
+    config[APT_PACKAGES]=false
+    config[ENABLE_SERVICES]=false
+    log_warning "Setting UPDATE_SYSTEM, APT_PACKAGES and ENABLE_SERVICES to false."
+fi
+
+# Log the current configuration
+for conf_key in "${!config[@]}"; do
+    log_config "$conf_key: ${config[$conf_key]}"
+done
 
 file_exists "packages.conf" || exit 1
 file_exists "dotfiles.conf" || exit 1
@@ -16,29 +112,57 @@ source packages.conf
 source dotfiles.conf
 source services.conf
 
-# Update the system first
-log_info "Updating system..."
-sudo apt update && sudo apt upgrade -y
+if [ "${config[UPDATE_SYSTEM]}" = true ]; then
+    log_info "Updating system..."
+    sudo apt update && sudo apt upgrade -y
+else
+    log_warning "Skipping system update as per configuration."
+fi
 
-log_info "Installing system utilities..."
-install_apt_packages "${APT_PACKAGES[@]}"
 
-log_info "Installing other packages..."
-install_starship_prompt
-install_lazydocker
-setup_tmux
-install_vim_pluginmanager
-install_fzf
-install_navi
-install_nvim
-install_ripgrep
+if [ "${config[APT_PACKAGES]}" = true ]; then
+    log_info "Installing system utilities..."
+    install_apt_packages "${APT_PACKAGES[@]}"
+else
+    log_warning "Skipping APT package installation as per configuration."
+fi
 
-enable_services "${SERVICES[@]}"
 
-setup_dotfiles
-stow_dotfiles "${DOTFILES_TO_STOW[@]}"
+if [ "${config[OTHER_PACKAGES]}" = true ]; then
+    log_info "Installing other packages..."
+    install_starship_prompt
+    install_lazydocker
+    setup_tmux
+    install_vim_pluginmanager install_fzf
+    install_navi
+    install_nvim
+    install_ripgrep
+else
+    log_warning "Skipping installation of other packages as per configuration."
+fi
 
-# Install Vim plugins after stowing dotfiles
-install_vim_plugins
+
+if [ "${config[ENABLE_SERVICES]}" = true ]; then
+    log_info "Enabling services..."
+    enable_services "${SERVICES[@]}"
+else
+    log_warning "Skipping enabling of services as per configuration."
+fi
+
+
+if [ "${config[SETUP_DOTFILES]}" = true ]; then
+    log_info "Setting up dotfiles..."
+    setup_dotfiles
+    stow_dotfiles "${DOTFILES_TO_STOW[@]}"
+else
+    log_warning "Skipping dotfile setup as per configuration."
+fi
+
+# some installations require settings from the dotfiles, so we do it afterwards
+if [ "${config[OTHER_PACKAGES]}" = true ]; then
+    install_vim_plugins
+else
+    log_warning "Skipping installation of other packages as per configuration."
+fi
 
 log_info "Setup complete! You may want to reboot your system."

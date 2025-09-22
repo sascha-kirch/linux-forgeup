@@ -35,7 +35,8 @@ ${_normal}
 _log() {
     local log_level=$1
     local message=$2
-    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    local timestamp=$(date +"%H:%M:%S")
+    # local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
     local color
 
     case $log_level in
@@ -48,12 +49,15 @@ _log() {
         "ERROR")
             color=$_red
             ;;
+        "CONFIG")
+            color=$_purple
+            ;;
         *)
             color=$_normal
             ;;
     esac
 
-    echo "${color}${_bold} $timestamp [$log_level] $message ${_normal}"
+    echo "${color}${_bold} $timestamp [$log_level][FORGE-UP] ${_normal} $message"
 
 }
 
@@ -67,6 +71,21 @@ log_warning() {
 
 log_error() {
     _log "ERROR" "$1"
+}
+
+log_config() {
+    _log "CONFIG" "$1"
+}
+
+can_sudo(){
+    groups "$(id -un)" 2>/dev/null | grep -q sudo
+    if [ $? -ne 0 ]; then
+        log_warning "User $(id -un) is not in the sudo group."
+        return 1
+    else
+        log_info "User $(id -un) is in the sudo group."
+        return 0
+    fi
 }
 
 # Function to check if a package is installed
