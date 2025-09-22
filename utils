@@ -1,12 +1,91 @@
 #!/usr/bin/env bash
 
+# Prevent multiple sourcing
+# [ "$sourced_a_sh" != "" ] && return || sourced_a_sh=.
+
+
+_bold=$(tput bold)
+_normal=$(tput sgr0)
+# 256 colors: https://unix.stackexchange.com/a/768209
+_red=$(tput setaf 1)
+_orange=$(tput setaf 3)
+_blue=$(tput setaf 4)
+_purple=$(tput setaf 5)
+
+# Clear screen and print the logo
+print_logo() {
+    clear
+    echo "
+${_blue}
+ _______  _______  _______  _______  _______           _______
+(  ____ \(  ___  )(  ____ )(  ____ \(  ____ \|\     /|(  ____ )
+| (    \/| (   ) || (    )|| (    \/| (    \/| )   ( || (    )|
+| (__    | |   | || (____)|| |      | (__    | |   | || (____)|
+|  __)   | |   | ||     __)| | ____ |  __)   | |   | ||  _____)
+| (      | |   | || (\ (   | | \_  )| (      | |   | || (
+| )      | (___) || ) \ \__| (___) || (____/\| (___) || )
+|/       (_______)|/   \__/(_______)(_______/(_______)|/
+${_purple}
+Linux System Setup Tool
+by: Sascha Kirch
+${_normal}
+"
+}
+
+_log() {
+    local log_level=$1
+    local message=$2
+    local timestamp=$(date +"%Y-%m-%d %H:%M:%S")
+    local color
+
+    case $log_level in
+        "INFO")
+            color=$_blue
+            ;;
+        "WARNING")
+            color=$_orange
+            ;;
+        "ERROR")
+            color=$_red
+            ;;
+        *)
+            color=$_normal
+            ;;
+    esac
+
+    echo "${color}${_bold} $timestamp [$log_level] $message ${_normal}"
+
+}
+
+log_info() {
+    _log "INFO" "$1"
+}
+
+log_warning() {
+    _log "WARNING" "$1"
+}
+
+log_error() {
+    _log "ERROR" "$1"
+}
+
 # Function to check if a package is installed
 is_installed() {
     dpkg -s "$1" &> /dev/null
 }
 
+file_exists(){
+    if [ ! -f "$1" ]; then
+        log_error "File $1 does not found!"
+        return 1
+    else
+        log_info "File $1 found."
+        return 0
+    fi
+}
+
 # Function to install packages if not already installed
-install_packages() {
+install_apt_packages() {
     local packages=("$@")
     local to_install=()
 
@@ -17,11 +96,24 @@ install_packages() {
     done
 
     if [ ${#to_install[@]} -ne 0 ]; then
-        echo "Installing: ${to_install[*]}"
+        log_info "Installing: ${to_install[*]}"
         sudo apt-get install -y "${to_install[@]}"
     else
-        echo "No package to be installed."
+        log_warning "No package to be installed."
     fi
+}
+
+enable_services() {
+    local services=("$@")
+
+    for service in "${services[@]}"; do
+        if ! systemctl is-enabled "$service" &> /dev/null; then
+            log_info "Enabling $service..."
+            sudo systemctl enable "$service"
+        else
+            log_warning "$service is already enabled"
+        fi
+    done
 }
 
 install_starship_prompt() {
@@ -29,26 +121,17 @@ install_starship_prompt() {
     local binary_path="$install_dir/starship"
 
     if [ -f "$binary_path" ]; then
-        echo "Starship is already installed at $binary_path"
+        log_warning "Starship is already installed at $binary_path"
     else
-        echo "Installing Starship..."
+        log_info "Installing Starship..."
         mkdir -p "$install_dir"
 
         curl -sSL https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-musl.tar.gz \
             | tar -xz -C "$install_dir"
 
         chmod +x "$binary_path"
-        echo "Starship installed to $binary_path"
+        log_info "Starship installed to $binary_path"
     fi
-
-    # Reminder: Don't append to .bashrc if you're using GNU Stow
-    echo 'Remember to add: eval "$(starship init bash)" to your stowed .bashrc'
-
-    # Add initialization to .bashrc. I will not add it automatically since I want to use GNU Stow
-    # echo 'eval "$(starship init bash)"' >> ~/.bashrc
-
-    # Preset Starship configuration - this will create a new file at ~/.config/starship.toml. I want to use GNU Stow
-    # starship preset catppuccin-powerline -o ~/.config/starship.toml
 }
 
 install_navi() {
@@ -57,16 +140,16 @@ install_navi() {
     local binary_path="$install_dir/navi"
 
     if [ -f "$binary_path" ]; then
-        echo "navi is already installed at $binary_path"
+        log_warning "navi is already installed at $binary_path"
     else
-        echo "Installing navi..."
+        log_info "Installing navi..."
         mkdir -p "$install_dir"
 
         curl -sSL https://github.com/denisidoro/navi/releases/download/$VERSION/navi-$VERSION-x86_64-unknown-linux-musl.tar.gz \
             | tar -xz -C "$install_dir"
 
         chmod +x "$binary_path"
-        echo "navi installed to $binary_path"
+        log_info "navi installed to $binary_path"
     fi
 
 }
@@ -82,10 +165,10 @@ install_ripgrep(){
     local filename="ripgrep-${VERSION}-x86_64-unknown-linux-musl"
 
     if [ -d "$package_path" ]; then
-        echo "ripgrep is already installed at $package_path"
+        log_warning "ripgrep is already installed at $package_path"
     else
 
-        echo "Installing ripgrep..."
+        log_info "Installing ripgrep..."
         mkdir -p "$package_path"
 
         # strip-components flattents the filetree so we get rid of the name of the compressed file.
@@ -97,31 +180,31 @@ install_ripgrep(){
         mkdir -p "$HOME/.local/bin"
         ln -sf "$package_path/rg" "$HOME/.local/bin/rg"
 
-        echo "ripgrep installed to $package_path"
+        log_info "ripgrep installed to $package_path"
     fi
 
 }
 
 install_rust() {
     if command -v rustc &> /dev/null; then
-        echo "Rust is already installed."
+        log_warning "Rust is already installed."
     else
-        echo "Installing Rust..."
+        log_info "Installing Rust..."
 
         # the shell script will launch a guided installer!
         curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
         source $HOME/.cargo/env
-        echo "Rust installed successfully."
+        log_info "Rust installed successfully."
     fi
 }
 
 uninstall_rust() {
     if command -v rustc &> /dev/null; then
-        echo "Uninstalling Rust..."
+        log_info "Uninstalling Rust..."
         rustup self uninstall -y
-        echo "Rust uninstalled successfully."
+        log_info "Rust uninstalled successfully."
     else
-        echo "Rust is not installed."
+        log_warning "Rust is not installed."
     fi
 }
 
@@ -135,21 +218,23 @@ install_nvim() {
     local filename="nvim-linux-x86_64"
 
     if [ -d "$package_path" ]; then
-        echo "nvim is already installed at $package_path"
+        log_warning "nvim is already installed at $package_path"
     else
 
         # remove any preinstalled version (e.g. those coming from ubuntu or apt)
         if is_installed neovim; then
-            echo "Removing preinstalled neovim package"
+            log_warning "Removing preinstalled neovim package"
             sudo apt remove -y neovim
         fi
 
         if [ -d "/usr/bin/nvim" ]; then
-            echo "Removing preinstalled /usr/bin/nvim"
+            log_warning "Removing preinstalled /usr/bin/nvim"
             sudo rm -rf /usr/bin/nvim
         fi
 
-        echo "Installing nvim..."
+        log_info "Installing nvim..."
+
+
         mkdir -p "$package_path"
 
         # strip-components flattents the filetree so we get rid of the name of the compressed file.
@@ -161,7 +246,7 @@ install_nvim() {
         mkdir -p "$HOME/.local/bin"
         ln -sf "$package_path/bin/nvim" "$HOME/.local/bin/nvim"
 
-        echo "nvim installed to $package_path"
+        log_info "nvim installed to $package_path"
     fi
 
 }
@@ -171,9 +256,9 @@ install_lazydocker() {
     LAZYDOCKER_DIR="$HOME/.local/bin/lazydocker"
 
     if [ -d "$LAZYDOCKER_DIR" ]; then
-        echo "TPM is already installed in $LAZYDOCKER_DIR"
+        log_warning "TPM is already installed in $LAZYDOCKER_DIR"
     else
-        echo "Installing lazydocker..."
+        log_info "Installing lazydocker..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh)"
     fi
 
@@ -182,27 +267,29 @@ install_lazydocker() {
 
 install_vim_pluginmanager() {
     if ! is_installed vim; then
-        echo "vim is not installed."
+        log_error "vim is not installed. Please install vim first."
         return
     fi
 
+    log_info "Installing vim-plug plugin manager..."
     curl -fLo ~/.vim/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
 
 }
 
 install_vim_plugins() {
     if ! is_installed vim; then
-        echo "vim is not installed."
+        log_error "vim is not installed. Please install vim first."
         return
     fi
 
     # Check if vim-plug is installed
     if [ ! -f ~/.vim/autoload/plug.vim ]; then
-        echo "vim-plug is not installed. Please run install_vim_pluginmanager first."
+        log_error "vim-plug is not installed. Please run install_vim_pluginmanager first."
         return
     fi
 
     # Install plugins using vim-plug
+    log_info "Installing vim plugins..."
     vim +PlugInstall +qall
 }
 
@@ -211,7 +298,7 @@ install_vim_plugins() {
 install_tmux_plugin_manager() {
 
     if ! is_installed tmux; then
-        echo "tmux is not installed."
+        log_error "tmux is not installed. Please install tmux first."
         return
     fi
 
@@ -219,22 +306,22 @@ install_tmux_plugin_manager() {
 
     # Check if TPM is already installed
     if [ -d "$TPM_DIR" ]; then
-        echo "TPM is already installed in $TPM_DIR"
+        log_warning "TPM is already installed in $TPM_DIR"
     else
-        echo "Installing Tmux Plugin Manager (TPM)..."
+        log_info "Installing Tmux Plugin Manager (TPM)..."
         git clone https://github.com/tmux-plugins/tpm $TPM_DIR
     fi
 
-    echo "TPM installed successfully!"
+    log_info "TPM installed successfully!"
 }
 
 install_tmux_catppuccin(){
     CATPPUCCIN_DIR=~/.config/tmux/plugins/catppuccin
 
     if [ -d "$CATPPUCCIN_DIR" ]; then
-        echo "Catppuccin is already installed in $CATPPUCCIN_DIR"
+        log_warning "Catppuccin is already installed in $CATPPUCCIN_DIR"
     else
-        echo "Installing Tmux Catppuccin theme..."
+        log_info "Installing Tmux Catppuccin theme..."
         mkdir -p $CATPPUCCIN_DIR
         git clone -b v2.1.3 https://github.com/catppuccin/tmux.git $CATPPUCCIN_DIR/tmux
     fi
@@ -247,7 +334,7 @@ install_fzf(){
     mkdir -p "$INSTALL_DIR"
 
     if [ -d "$INSTALL_DIR/fzf" ]; then
-        echo "fzf is already installed in $INSTALL_DIR/fzf"
+        log_warning "fzf is already installed in $INSTALL_DIR/fzf"
         return
     fi
 
@@ -255,11 +342,11 @@ install_fzf(){
     | tar -xz -C $INSTALL_DIR
 
     if [ $? -ne 0 ]; then
-        echo "Failed to download or extract fzf."
+        log_error "Failed to download or extract fzf."
         return
     fi
 
-    echo "fzf version $VERSION installed successfully to $INSTALL_DIR/fzf"
+    log_info "fzf version $VERSION installed successfully to $INSTALL_DIR/fzf"
 }
 
 # When seting up tmux there is some manual cloning of repositories involved. The dotfiles are not managed by GNU Stow
@@ -269,7 +356,7 @@ setup_tmux(){
 }
 
 setup_dotfiles() {
-    echo "Setting up dotfiles..."
+    log_info "Setting up dotfiles..."
 
     DOTFILES_REPO_NAME="dotfiles"
     DOTFILES_REPO="https://github.com/sascha-kirch/$DOTFILES_REPO_NAME.git"
@@ -278,39 +365,40 @@ setup_dotfiles() {
     source dotfiles.conf
 
     if ! is_installed stow; then
-        echo "Install stow first"
+        log_error "GNU Stow is not installed, install it first"
         return
     fi
 
     # Check if the repository already exists
     if [ -d "$DOTFILES_DIR" ]; then
-        echo "Directory '$DOTFILES_DIR' already exists. Skipping clone"
+        log_warning "Directory '$DOTFILES_DIR' already exists. Skipping clone"
     else
         git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
     fi
 
     # Check if the clone was successful
     if [ $? -eq 0 ]; then
-        echo "Cloning the repository was successful."
+        log_info "Cloning the repository was successful."
     else
-        echo "Failed to clone the repository."
+        log_error "Failed to clone the repository."
         return
     fi
 }
 
 
+# TODO: stow files individually and check for errors
 stow_dotfiles() {
     local dotfiles=("$@")
 
     pushd "$HOME/dotfiles"
 
     if [ ${#dotfiles[@]} -ne 0 ]; then
-        echo "Stowing dotfiles: ${dotfiles[*]}"
+        log_info "Stowing dotfiles: ${dotfiles[*]}"
         stow -R "${dotfiles[@]}"
     else
-        echo "No dotfiles to be stowed."
+        log_warning "No dotfiles to be stowed."
     fi
 
     popd
-    echo "Dotfiles stowed successfully."
+    log_info "Dotfiles stowed successfully."
 }
