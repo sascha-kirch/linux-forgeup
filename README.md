@@ -7,6 +7,8 @@ Linux System Tool to automate setup and configuration of my debian based linux d
 - enables and starts services
 - clones my dotfiles from [https://github.com/sascha-kirch/dotfiles](https://github.com/sascha-kirch/dotfiles) and stows them
 
+<img src="media/usage.png" alt="Forge-Up Usage" width="100%">
+
 # Installion
 
 1. Clone this repository:
