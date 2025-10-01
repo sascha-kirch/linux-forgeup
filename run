@@ -138,6 +138,7 @@ if [ "${config[OTHER_PACKAGES]}" = true ]; then
     install_nvim
     install_ripgrep
     install_eza
+    install_zoxide
 else
     log_warning "Skipping installation of other packages as per configuration."
 fi

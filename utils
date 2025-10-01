@@ -292,13 +292,27 @@ install_nvim() {
 
 install_lazydocker() {
 
-    LAZYDOCKER_DIR="$HOME/.local/bin/lazydocker"
+    INSTALL_DIR="$HOME/.local/bin/lazydocker"
 
-    if [ -d "$LAZYDOCKER_DIR" ]; then
-        log_warning "TPM is already installed in $LAZYDOCKER_DIR"
+    if [ -f "$INSTALL_DIR" ]; then
+        log_warning "lazydocker is already installed in $INSTALL_DIR"
     else
         log_info "Installing lazydocker..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh)"
+    fi
+
+    # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
+}
+
+install_zoxide() {
+
+    INSTALL_DIR="$HOME/.local/bin/zoxide"
+
+    if [ -f "$INSTALL_DIR" ]; then
+        log_warning "zoxide is already installed in $INSTALL_DIR"
+    else
+        log_info "Installing zoxide..."
+        sh -c "$(curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh)"
     fi
 
     # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
