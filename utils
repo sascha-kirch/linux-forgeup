@@ -224,6 +224,38 @@ install_ripgrep(){
 
 }
 
+
+install_dust(){
+    # Note that this installs a standalone version of dust into ~/.local/packages. In contrast to the previous functions
+    # dust is not a single binary but a directory containing multiple files.
+
+    local VERSION="${1:-v1.2.3}" # Default version if not provided
+    local install_dir="$HOME/.local/packages"
+    local package_path="$install_dir/dust"
+
+    local filename="dust-${VERSION}-x86_64-unknown-linux-musl"
+
+    if [ -d "$package_path" ]; then
+        log_warning "dust is already installed at $package_path"
+    else
+
+        log_info "Installing dust..."
+        mkdir -p "$package_path"
+
+        # strip-components flattents the filetree so we get rid of the name of the compressed file.
+        curl -LO https://github.com/bootandy/dust/releases/download/${VERSION}/${filename}.tar.gz
+        tar -C "$package_path" --strip-components=1 -xzf ${filename}.tar.gz
+        rm -rf ${filename}.tar.gz
+
+        # create symlink to .local/bin
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$package_path/dust" "$HOME/.local/bin/dust"
+
+        log_info "dust installed to $package_path"
+    fi
+
+}
+
 install_rust() {
     if command -v rustc &> /dev/null; then
         log_warning "Rust is already installed."

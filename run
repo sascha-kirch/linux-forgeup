@@ -139,6 +139,7 @@ if [ "${config[OTHER_PACKAGES]}" = true ]; then
     install_ripgrep
     install_eza
     install_zoxide
+    install_dust
 else
     log_warning "Skipping installation of other packages as per configuration."
 fi
