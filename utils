@@ -224,7 +224,6 @@ install_ripgrep(){
 
 }
 
-
 install_dust(){
     # Note that this installs a standalone version of dust into ~/.local/packages. In contrast to the previous functions
     # dust is not a single binary but a directory containing multiple files.
@@ -252,6 +251,37 @@ install_dust(){
         ln -sf "$package_path/dust" "$HOME/.local/bin/dust"
 
         log_info "dust installed to $package_path"
+    fi
+
+}
+
+install_lazygit(){
+    # Note that this installs a standalone version of lazygit into ~/.local/packages. In contrast to the previous functions
+    # lazygit is not a single binary but a directory containing multiple files.
+
+    local VERSION="${1:-0.55.1}" # Default version if not provided
+    local install_dir="$HOME/.local/packages"
+    local package_path="$install_dir/lazygit"
+
+    local filename="lazygit_${VERSION}_linux_x86_64"
+
+    if [ -d "$package_path" ]; then
+        log_warning "lazygit is already installed at $package_path"
+    else
+
+        log_info "Installing lazygit..."
+        mkdir -p "$package_path"
+
+        # strip-components flattents the filetree so we get rid of the name of the compressed file.
+        curl -LO https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/${filename}.tar.gz
+        tar -C "$package_path" -xzf ${filename}.tar.gz
+        rm -rf ${filename}.tar.gz
+
+        # create symlink to .local/bin
+        mkdir -p "$HOME/.local/bin"
+        ln -sf "$package_path/lazygit" "$HOME/.local/bin/lazygit"
+
+        log_info "lazygit installed to $package_path"
     fi
 
 }

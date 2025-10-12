@@ -140,6 +140,7 @@ if [ "${config[OTHER_PACKAGES]}" = true ]; then
     install_eza
     install_zoxide
     install_dust
+    install_lazygit
 else
     log_warning "Skipping installation of other packages as per configuration."
 fi
