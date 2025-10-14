@@ -135,7 +135,6 @@ enable_services() {
     done
 }
 
-
 install_gh_binary() {
     local repo_name=${1} # e.g. starship/starship
     local version=${2} # e.g. v0.23.5
@@ -147,13 +146,13 @@ install_gh_binary() {
     local binary_path="$install_dir/$binary_name"
 
     if [ -f "$binary_path" ]; then
-        log_warning "'$binary_name' is already installed at '$binary_path'. Skipping installation."
-
+        log_warning "'$binary_name' is already installed at '$binary_path'."
         if [ "${reinstall}" = true ]; then
             log_warning "Reinstalling..."
             log_warning "Removing existing binary at '$binary_path'"
             rm -f "$binary_path"
         else
+            log_warning "Skipping installation."
             return
         fi
     fi
@@ -176,6 +175,64 @@ install_gh_binary() {
     log_info "Installed version '$version' of repo '$repo_name' to '$binary_path' as '$binary_name'"
 }
 
+install_gh_package(){
+    local repo_name=${1} # e.g. starship/starship
+    local repo_sub_name=$(basename "${repo_name}")
+    local version=${2} # e.g. v0.23.5
+    local filename=${3} # e.g. starship-x86_64-unknown-linux-musl.tar.gz
+    local reinstall=${4:-false} # Default is false
+    local strip_components=${5:-0} # Default is 0.
+    local binary_name=${6:-$repo_sub_name} # if the binary name is not provided, use the repo name
+    local package_binary_subdir=${7} # if the binary is inside a subdirectory after extraction. e.g. bin/nvim => bin/
+
+    local package_dir="$HOME/.local/packages/$repo_sub_name"
+    local link_dir="$HOME/.local/bin"
+
+    local package_binary="$package_dir/$package_binary_subdir$binary_name"
+    local link_binary="$link_dir/$binary_name"
+
+    if [ -d "$package_dir" ]; then
+        log_warning "Package '$repo_sub_name' is already installed at '$package_dir'."
+
+        if [ "${reinstall}" = true ]; then
+            log_warning "Reinstalling..."
+
+            log_warning "Removing existing package '$package_dir'"
+            rm -rf "$package_dir"
+
+            log_warning "Removing existing symlink '$link_binary'"
+            rm -f "$link_binary"
+        else
+            log_warning "Skipping installation."
+            return
+        fi
+    fi
+
+    log_info "Installing version '$version' of repo '$repo_name' ..."
+    mkdir -p "$package_dir"
+    mkdir -p "$link_dir"
+
+    local download_url="https://github.com/$repo_name/releases/download/${version}/${filename}.tar.gz"
+
+    log_info "Downloading from '$download_url'"
+    curl -sSL "$download_url" | tar -xz --strip-components="${strip_components}" -C "$package_dir"
+
+    if [ $? -ne 0 ]; then
+        log_error "Failed to download or extract '$repo_name' with link '$download_url'. Aborting installation."
+        return
+    fi
+
+    if [ ! -f "$package_binary" ]; then
+        log_error "Expected binary '$package_binary' not found after extraction. Aborting installation."
+        # clean up
+        rm -rf "$package_dir"
+        return
+    fi
+
+    ln -sf "$package_binary" "$link_binary"
+    log_info "Installed version '$version' of repo '$repo_name' to '$package_dir' and symlinked to '$link_binary'"
+}
+
 install_starship_prompt() {
     local version="${1:-v1.23.0}"
     install_gh_binary "starship/starship" "$version" "starship-x86_64-unknown-linux-musl" true
@@ -192,101 +249,41 @@ install_navi() {
 }
 
 install_fzf(){
-    local version="${1:-0.66.0}" # carefull with the version format here. there is no 'v' prefix
-    install_gh_binary "junegunn/fzf" "v$version" "fzf-$version-linux_amd64" true
+    local version="${1:-v0.66.0}"
+    install_gh_binary "junegunn/fzf" "$version" "fzf-${version:1}-linux_amd64" true
 }
 
 install_ripgrep(){
-    # Note that this installs a standalone version of nvim into ~/.local/packages. In contrast to the previous functions
-    # ripgrep is not a single binary but a directory containing multiple files.
-
-    local VERSION="${1:-14.1.1}" # Default version if not provided
-    local install_dir="$HOME/.local/packages"
-    local package_path="$install_dir/ripgrep"
-
-    local filename="ripgrep-${VERSION}-x86_64-unknown-linux-musl"
-
-    if [ -d "$package_path" ]; then
-        log_warning "ripgrep is already installed at $package_path"
-    else
-
-        log_info "Installing ripgrep..."
-        mkdir -p "$package_path"
-
-        # strip-components flattents the filetree so we get rid of the name of the compressed file.
-        curl -LO https://github.com/BurntSushi/ripgrep/releases/download/${VERSION}/${filename}.tar.gz
-        tar -C "$package_path" --strip-components=1 -xzf ${filename}.tar.gz
-        rm -rf ${filename}.tar.gz
-
-        # create symlink to .local/bin
-        mkdir -p "$HOME/.local/bin"
-        ln -sf "$package_path/rg" "$HOME/.local/bin/rg"
-
-        log_info "ripgrep installed to $package_path"
-    fi
-
+    local version="${1:-14.1.1}"
+    install_gh_package "BurntSushi/ripgrep" "$version" "ripgrep-${version}-x86_64-unknown-linux-musl" true 1 "rg"
 }
 
+
 install_dust(){
-    # Note that this installs a standalone version of dust into ~/.local/packages. In contrast to the previous functions
-    # dust is not a single binary but a directory containing multiple files.
-
-    local VERSION="${1:-v1.2.3}" # Default version if not provided
-    local install_dir="$HOME/.local/packages"
-    local package_path="$install_dir/dust"
-
-    local filename="dust-${VERSION}-x86_64-unknown-linux-musl"
-
-    if [ -d "$package_path" ]; then
-        log_warning "dust is already installed at $package_path"
-    else
-
-        log_info "Installing dust..."
-        mkdir -p "$package_path"
-
-        # strip-components flattents the filetree so we get rid of the name of the compressed file.
-        curl -LO https://github.com/bootandy/dust/releases/download/${VERSION}/${filename}.tar.gz
-        tar -C "$package_path" --strip-components=1 -xzf ${filename}.tar.gz
-        rm -rf ${filename}.tar.gz
-
-        # create symlink to .local/bin
-        mkdir -p "$HOME/.local/bin"
-        ln -sf "$package_path/dust" "$HOME/.local/bin/dust"
-
-        log_info "dust installed to $package_path"
-    fi
-
+    local version="${1:-v1.2.3}"
+    install_gh_package "bootandy/dust" "$version" "dust-${version}-x86_64-unknown-linux-musl" true 1
 }
 
 install_lazygit(){
-    # Note that this installs a standalone version of lazygit into ~/.local/packages. In contrast to the previous functions
-    # lazygit is not a single binary but a directory containing multiple files.
+    local version="${1:-v0.55.1}" # Default version if not provided
+    install_gh_package "jesseduffield/lazygit" "$version" "lazygit_${version:1}_linux_x86_64" true
+}
 
-    local VERSION="${1:-0.55.1}" # Default version if not provided
-    local install_dir="$HOME/.local/packages"
-    local package_path="$install_dir/lazygit"
+install_nvim() {
+    local version="${1:-v0.11.4}"
 
-    local filename="lazygit_${VERSION}_linux_x86_64"
-
-    if [ -d "$package_path" ]; then
-        log_warning "lazygit is already installed at $package_path"
-    else
-
-        log_info "Installing lazygit..."
-        mkdir -p "$package_path"
-
-        # strip-components flattents the filetree so we get rid of the name of the compressed file.
-        curl -LO https://github.com/jesseduffield/lazygit/releases/download/v${VERSION}/${filename}.tar.gz
-        tar -C "$package_path" -xzf ${filename}.tar.gz
-        rm -rf ${filename}.tar.gz
-
-        # create symlink to .local/bin
-        mkdir -p "$HOME/.local/bin"
-        ln -sf "$package_path/lazygit" "$HOME/.local/bin/lazygit"
-
-        log_info "lazygit installed to $package_path"
+    # remove any preinstalled version (e.g. those coming from ubuntu or apt)
+    if is_installed neovim; then
+        log_warning "Removing preinstalled neovim package"
+        sudo apt remove -y neovim
     fi
 
+    if [ -d "/usr/bin/nvim" ]; then
+        log_warning "Removing preinstalled /usr/bin/nvim"
+        sudo rm -rf /usr/bin/nvim
+    fi
+
+    install_gh_package "neovim/neovim" "$version" "nvim-linux-x86_64" true 1 "nvim" "bin/"
 }
 
 install_rust() {
@@ -310,49 +307,6 @@ uninstall_rust() {
     else
         log_warning "Rust is not installed."
     fi
-}
-
-install_nvim() {
-    # Note that this installs a standalone version of nvim into ~/.local. In contrast to the previous functions
-    # nvim is not a single binary but a directory containing multiple files.
-
-    local VERSION="${1:-v0.11.4}" # Default version if not provided
-    local install_dir="$HOME/.local/packages"
-    local package_path="$install_dir/nvim"
-    local filename="nvim-linux-x86_64"
-
-    if [ -d "$package_path" ]; then
-        log_warning "nvim is already installed at $package_path"
-    else
-
-        # remove any preinstalled version (e.g. those coming from ubuntu or apt)
-        if is_installed neovim; then
-            log_warning "Removing preinstalled neovim package"
-            sudo apt remove -y neovim
-        fi
-
-        if [ -d "/usr/bin/nvim" ]; then
-            log_warning "Removing preinstalled /usr/bin/nvim"
-            sudo rm -rf /usr/bin/nvim
-        fi
-
-        log_info "Installing nvim..."
-
-
-        mkdir -p "$package_path"
-
-        # strip-components flattents the filetree so we get rid of the name of the compressed file.
-        curl -LO https://github.com/neovim/neovim/releases/download/$VERSION/${filename}.tar.gz
-        tar -C "$package_path" --strip-components=1 -xzf ${filename}.tar.gz
-        rm -rf ${filename}.tar.gz
-
-        # create symlink to .local/bin
-        mkdir -p "$HOME/.local/bin"
-        ln -sf "$package_path/bin/nvim" "$HOME/.local/bin/nvim"
-
-        log_info "nvim installed to $package_path"
-    fi
-
 }
 
 install_lazydocker() {
@@ -410,8 +364,6 @@ install_vim_plugins() {
     log_info "Installing vim plugins..."
     vim +PlugInstall +qall
 }
-
-
 
 install_tmux_plugin_manager() {
 
