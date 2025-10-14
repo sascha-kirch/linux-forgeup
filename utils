@@ -135,62 +135,65 @@ enable_services() {
     done
 }
 
-install_starship_prompt() {
+
+install_gh_binary() {
+    local repo_name=${1} # e.g. starship/starship
+    local version=${2} # e.g. v0.23.5
+    local filename=${3} # e.g. starship-x86_64-unknown-linux-musl.tar.gz
+    local reinstall=${4:-false} # Default is false
+    local binary_name=${5:-$(basename "${repo_name}")} # if the binary name is not provided, use the repo name
+
     local install_dir="$HOME/.local/bin"
-    local binary_path="$install_dir/starship"
+    local binary_path="$install_dir/$binary_name"
 
     if [ -f "$binary_path" ]; then
-        log_warning "Starship is already installed at $binary_path"
-    else
-        log_info "Installing Starship..."
-        mkdir -p "$install_dir"
+        log_warning "'$binary_name' is already installed at '$binary_path'. Skipping installation."
 
-        curl -sSL https://github.com/starship/starship/releases/latest/download/starship-x86_64-unknown-linux-musl.tar.gz \
-            | tar -xz -C "$install_dir"
-
-        chmod +x "$binary_path"
-        log_info "Starship installed to $binary_path"
+        if [ "${reinstall}" = true ]; then
+            log_warning "Reinstalling..."
+            log_warning "Removing existing binary at '$binary_path'"
+            rm -f "$binary_path"
+        else
+            return
+        fi
     fi
+
+    log_info "Installing version '$version' of repo '$repo_name' ..."
+    mkdir -p "$install_dir"
+
+    local download_url="https://github.com/$repo_name/releases/download/${version}/${filename}.tar.gz"
+
+    log_info "Downloading from '$download_url'"
+    curl -L "$download_url" | tar -xz -C "$install_dir"
+
+    if [ $? -ne 0 ]; then
+        log_error "Failed to download or extract '$repo_name' with link '$download_url'. Aborting installation."
+        return
+    fi
+
+    # TODO: add error handling
+    chmod +x "$binary_path"
+    log_info "Installed version '$version' of repo '$repo_name' to '$binary_path' as '$binary_name'"
+}
+
+install_starship_prompt() {
+    local version="${1:-v1.23.0}"
+    install_gh_binary "starship/starship" "$version" "starship-x86_64-unknown-linux-musl" true
 }
 
 install_eza() {
-    local VERSION="${1:-v0.23.3}" # Default version if not provided
-    local install_dir="$HOME/.local/bin"
-    local binary_path="$install_dir/eza"
-
-    if [ -f "$binary_path" ]; then
-        log_warning "eza is already installed at $binary_path"
-    else
-        log_info "Installing eza..."
-        mkdir -p "$install_dir"
-
-        curl -sSL https://github.com/eza-community/eza/releases/download/$VERSION/eza_x86_64-unknown-linux-musl.tar.gz \
-            | tar -xz -C "$install_dir"
-
-        chmod +x "$binary_path"
-        log_info "eza installed to $binary_path"
-    fi
-
+    local version="${1:-v0.23.4}"
+    install_gh_binary "eza-community/eza" "$version" "eza_x86_64-unknown-linux-musl" true
 }
 
 install_navi() {
-    local VERSION="${1:-v2.24.0}" # Default version if not provided
-    local install_dir="$HOME/.local/bin"
-    local binary_path="$install_dir/navi"
+    local version="${1:-v2.24.0}"
+    install_gh_binary "denisidoro/navi" "$version" "navi-$version-x86_64-unknown-linux-musl" true
+}
 
-    if [ -f "$binary_path" ]; then
-        log_warning "navi is already installed at $binary_path"
-    else
-        log_info "Installing navi..."
-        mkdir -p "$install_dir"
-
-        curl -sSL https://github.com/denisidoro/navi/releases/download/$VERSION/navi-$VERSION-x86_64-unknown-linux-musl.tar.gz \
-            | tar -xz -C "$install_dir"
-
-        chmod +x "$binary_path"
-        log_info "navi installed to $binary_path"
-    fi
-
+install_fzf(){
+    local version="${1:-0.66.0}" # carefull with the version format here. there is no 'v' prefix
+    install_gh_binary "junegunn/fzf" "v$version" "fzf-$version-linux_amd64" true
 }
 
 install_ripgrep(){
@@ -442,32 +445,12 @@ install_tmux_catppuccin(){
     fi
 }
 
-install_fzf(){
-    local VERSION="${1:-0.65.1}" # Default version if not provided
-    local INSTALL_DIR="$HOME/.local/bin"
 
-    mkdir -p "$INSTALL_DIR"
-
-    if [ -d "$INSTALL_DIR/fzf" ]; then
-        log_warning "fzf is already installed in $INSTALL_DIR/fzf"
-        return
-    fi
-
-    curl -L https://github.com/junegunn/fzf/releases/download/v$VERSION/fzf-$VERSION-linux_amd64.tar.gz \
-    | tar -xz -C $INSTALL_DIR
-
-    if [ $? -ne 0 ]; then
-        log_error "Failed to download or extract fzf."
-        return
-    fi
-
-    log_info "fzf version $VERSION installed successfully to $INSTALL_DIR/fzf"
-}
 
 # When seting up tmux there is some manual cloning of repositories involved. The dotfiles are not managed by GNU Stow
 setup_tmux(){
     install_tmux_plugin_manager
-    install_tmux_catppuccin
+    # install_tmux_catppuccin
 }
 
 setup_dotfiles() {
