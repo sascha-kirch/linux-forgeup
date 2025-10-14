@@ -164,7 +164,7 @@ install_gh_binary() {
     local download_url="https://github.com/$repo_name/releases/download/${version}/${filename}.tar.gz"
 
     log_info "Downloading from '$download_url'"
-    curl -L "$download_url" | tar -xz -C "$install_dir"
+    curl -sSL "$download_url" | tar -xz -C "$install_dir"
 
     if [ $? -ne 0 ]; then
         log_error "Failed to download or extract '$repo_name' with link '$download_url'. Aborting installation."
