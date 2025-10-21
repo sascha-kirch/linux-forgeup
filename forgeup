@@ -26,7 +26,7 @@ EOF
 
 
 # Source utility functions
-source utils
+source forgeup_lib.sh
 
 print_logo
 
@@ -104,13 +104,13 @@ for conf_key in "${!config[@]}"; do
     log_config "$conf_key: ${config[$conf_key]}"
 done
 
-file_exists "packages.conf" || exit 1
-file_exists "dotfiles.conf" || exit 1
-file_exists "services.conf" || exit 1
+file_exists "config/packages.conf" || exit 1
+file_exists "config/dotfiles.conf" || exit 1
+file_exists "config/services.conf" || exit 1
 
-source packages.conf
-source dotfiles.conf
-source services.conf
+source config/packages.conf
+source config/dotfiles.conf
+source config/services.conf
 
 if [ "${config[UPDATE_SYSTEM]}" = true ]; then
     log_info "Updating system..."
