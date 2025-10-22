@@ -10,28 +10,28 @@ install_tmux_plugin_manager() {
         return
     fi
 
-    TPM_DIR="$HOME/.tmux/plugins/tpm"
+    local tpm_dir="$HOME/.tmux/plugins/tpm"
 
     # Check if TPM is already installed
-    if [ -d "$TPM_DIR" ]; then
-        log_warning "TPM is already installed in $TPM_DIR"
+    if [ -d "$tpm_dir" ]; then
+        log_warning "TPM is already installed in $tpm_dir"
     else
         log_info "Installing Tmux Plugin Manager (TPM)..."
-        git clone https://github.com/tmux-plugins/tpm $TPM_DIR
+        git clone https://github.com/tmux-plugins/tpm "$tpm_dir"
     fi
 
     log_info "TPM installed successfully!"
 }
 
 install_tmux_catppuccin(){
-    CATPPUCCIN_DIR=~/.config/tmux/plugins/catppuccin
+    local catppuccin_dir=~/.config/tmux/plugins/catppuccin
 
-    if [ -d "$CATPPUCCIN_DIR" ]; then
-        log_warning "Catppuccin is already installed in $CATPPUCCIN_DIR"
+    if [ -d "$catppuccin_dir" ]; then
+        log_warning "Catppuccin is already installed in $catppuccin_dir"
     else
         log_info "Installing Tmux Catppuccin theme..."
-        mkdir -p $CATPPUCCIN_DIR
-        git clone -b v2.1.3 https://github.com/catppuccin/tmux.git $CATPPUCCIN_DIR/tmux
+        mkdir -p $catppuccin_dir
+        git clone -b v2.1.3 https://github.com/catppuccin/tmux.git "$catppuccin_dir/tmux"
     fi
 }
 

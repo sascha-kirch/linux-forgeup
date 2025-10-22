@@ -48,7 +48,7 @@ install_nvim() {
         sudo apt remove -y neovim
     fi
 
-    if [ -d "/usr/bin/nvim" ]; then
+    if [ -f "/usr/bin/nvim" ]; then
         log_warning "Removing preinstalled /usr/bin/nvim"
         sudo rm -rf /usr/bin/nvim
     fi
@@ -81,10 +81,10 @@ uninstall_rust() {
 
 install_lazydocker() {
 
-    INSTALL_DIR="$HOME/.local/bin/lazydocker"
+    local install_dir="$HOME/.local/bin/lazydocker"
 
-    if [ -f "$INSTALL_DIR" ]; then
-        log_warning "lazydocker is already installed in $INSTALL_DIR"
+    if [ -f "$install_dir" ]; then
+        log_warning "lazydocker is already installed in $install_dir"
     else
         log_info "Installing lazydocker..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh)"
@@ -95,10 +95,10 @@ install_lazydocker() {
 
 install_zoxide() {
 
-    INSTALL_DIR="$HOME/.local/bin/zoxide"
+    local install_dir="$HOME/.local/bin/zoxide"
 
-    if [ -f "$INSTALL_DIR" ]; then
-        log_warning "zoxide is already installed in $INSTALL_DIR"
+    if [ -f "$install_dir" ]; then
+        log_warning "zoxide is already installed in $install_dir"
     else
         log_info "Installing zoxide..."
         sh -c "$(curl -fsSL https://raw.githubusercontent.com/ajeetdsouza/zoxide/main/install.sh)"

@@ -59,7 +59,7 @@ _log() {
             ;;
     esac
 
-    echo "${color}${_bold} $timestamp [$log_level][FORGE-UP] ${_normal} $message"
+    echo "${color}${_bold}$timestamp [$log_level][FORGE-UP]:${_normal} $message"
 
 }
 
