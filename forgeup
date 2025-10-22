@@ -10,11 +10,11 @@ Usage: $0 [OPTIONS]
 Setup and configure a Linux system with various options.
 
 Options:
-    -u, --update-system    Update and upgrade the system packages. [Requires sudo].
-    -a, --apt-packages     Install APT packages listed in packages.conf. [Requires sudo].
+    -u, --update-system    Update and upgrade the system packages with apt. [Requires sudo].
+    -a, --apt-packages     Install APT packages listed in config/packages.conf. [Requires sudo].
     -o, --other-packages   Install other packages/tools.
-    -s, --enable-services  Enable and start services listed in services.conf. [Requires sudo].
-    -d, --setup-dotfiles   Setup and stow dotfiles listed in dotfiles from https://github.com/sascha-kirch/dotfiles.
+    -s, --enable-services  Enable and start services listed in config/services.conf. [Requires sudo].
+    -d, --setup-dotfiles   Setup and stow dotfiles listed in config/dotfiles.conf from https://github.com/sascha-kirch/dotfiles.
     -h, --help             Display this help message.
 
 Examples:
@@ -26,7 +26,7 @@ EOF
 
 
 # Source utility functions
-source utils
+source forgeup_lib.sh
 
 print_logo
 
@@ -104,13 +104,13 @@ for conf_key in "${!config[@]}"; do
     log_config "$conf_key: ${config[$conf_key]}"
 done
 
-file_exists "packages.conf" || exit 1
-file_exists "dotfiles.conf" || exit 1
-file_exists "services.conf" || exit 1
+file_exists "config/packages.conf" || exit 1
+file_exists "config/dotfiles.conf" || exit 1
+file_exists "config/services.conf" || exit 1
 
-source packages.conf
-source dotfiles.conf
-source services.conf
+source config/packages.conf
+source config/dotfiles.conf
+source config/services.conf
 
 if [ "${config[UPDATE_SYSTEM]}" = true ]; then
     log_info "Updating system..."
