@@ -5,9 +5,9 @@ set -e
 # Function to display usage information
 usage() {
     cat << EOF
-Usage: $0 [OPTIONS]
-
 Setup and configure a Linux system with various options.
+
+Usage: $0 [OPTIONS]
 
 Options:
     -u, --update-system    Update and upgrade the system packages with apt. [Requires sudo].
@@ -24,11 +24,8 @@ Examples:
 EOF
 }
 
-
 # Source utility functions
 source forgeup_lib.sh
-
-print_logo
 
 # set default configuration
 declare -A config=(
@@ -89,6 +86,8 @@ while true; do
             ;;
     esac
 done
+
+print_logo
 
 # Check if the user has sudo privileges and adjust configuration accordingly
 if [ ! "$(can_sudo)" ]; then

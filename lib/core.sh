@@ -21,7 +21,7 @@ is_installed() {
 
 file_exists(){
     if [ ! -f "$1" ]; then
-        log_error "File $1 does not found!"
+        log_error "File $1 does not exist!"
         return 1
     else
         log_info "File $1 found."
