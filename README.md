@@ -1,113 +1,208 @@
 # linux-forgeup
+> Modular, no‑sudo friendly Debian/Ubuntu bootstrap: local GitHub release installers + optional full system provisioning.
 
-Forge-Up is a lightweight setup and bootstrap tool for Debian/Ubuntu-based systems. It targets two common scenarios:
+<img src="media/banner.png" alt="forge-up-banner" width="100%">
 
-1. Fresh system provisioning (with sudo): install APT packages, enable services, apply dotfiles.
-2. Constrained environments (no sudo): install user-local binaries directly from GitHub releases into `$HOME/.local/bin` and `$HOME/.local/packages`.
+## ✨ Scenarios
 
-## Why
+| Scenario | What You Get |
+|----------|--------------|
+| Fresh machine (sudo access) | Install all you need on a new machine exactly like you are used to on other machines: APT packages, services, dotfiles, modern CLI stack |
+| Restricted host (no sudo) | Local `$HOME/.local/bin` installs (fzf, ripgrep, starship, neovim, etc.) |
 
 On many servers (CI runners, shared university hosts, corporate bastions) you lack sudo. Standard package managers become unusable. Forge-Up provides helpers to fetch and unpack release artifacts locally (e.g. `install_starship_prompt`, `install_eza`, `install_ripgrep`) so you still get modern tooling.
 
-## Features
+## 🧩 Key Features
 
-- APT batch install via `install_apt_packages` using [packages.conf](packages.conf) (sudo only).
-- Local (no sudo) GitHub release installers:
-  - Binaries: `install_gh_binary`
-  - Packages with symlink: `install_gh_package`
-  - Convenience wrappers: `install_starship_prompt`, `install_eza`, `install_fzf`, `install_ripgrep`, `install_lazygit`, `install_navi`, `install_nvim`, `install_dust`, `install_zoxide`, `install_lazydocker`
-- Dotfiles cloning + stowing via `setup_dotfiles` and `stow_dotfiles` using [dotfiles.conf](dotfiles.conf).
-- Service enabling via `enable_services` using [services.conf](services.conf).
-- Logging helpers (`log_info`, `log_warning`, `log_error`, `log_config`).
-- Tmux setup helpers (`install_tmux_plugin_manager`, `setup_tmux`).
+- APT install batch via `install_apt_packages`
+- Local (no sudo) GitHub release installers (`install_gh_binary`, `install_gh_package`) plus wrappers:
+  starship, eza, fzf, ripgrep (rg), lazygit, lazydocker, navi, neovim, dust, zoxide, rust
+- Dotfiles cloning + stowing (GNU Stow)
+- Systemd service enabling
+- Colored logging + ASCII banner
+- Idempotent, re-runnable provisioning
 
-## Quick Start (Full Provisioning)
+## 🚀 Quick Start (Full Provisioning)
 
 ```bash
 git clone https://github.com/sascha-kirch/linux-forgeup.git
 cd linux-forgeup
-chmod +x run
-./run -u -a -o -d
+chmod +x forgeup
+./forgeup -u -a -o -d
 ```
 
-<img src="media/usage.png" alt="Forge-Up Usage" width="100%">
 
-Flags:
-- `-u` update system
-- `-a` install APT packages
-- `-o` install other (local) packages
-- `-d` clone & stow dotfiles
-- `-s` enable services (if any listed)
-- `-h` help
+**Flags:**
 
-Example minimal (only local user installs, no sudo):
+- `-u`, `--update-system`: Update and upgrade the system packages with apt. [Requires sudo].
+- `-a`, `--apt-packages`: Install APT packages listed in [config/packages.conf](config/packages.conf). [Requires sudo].
+- `-o`, `--other-packages`: install other (local) packages
+- `-s`, `--enable-services`: Enable and start services listed in [config/services.conf](config/services.conf). [Requires sudo].
+- `-d`, `--setup-dotfiles`: Setup and stow dotfiles listed in [config/dotfiles.conf](config/dotfiles.conf) from [sascha-kirch/dotfiles](https://github.com/sascha-kirch/dotfiles).
+- `-h`, `--help`: Display help message.
+
+
+No-sudo minimal (only local user installs, no sudo):
+
 ```bash
-./run -o
+./forgeup -o
 ```
-If you lack sudo, Forge-Up auto-disables APT and service steps.
 
-## Using Individual Functions (No Sudo Workflow)
+>[!NOTE]
+>Forge-Up auto-disables sudo-required steps if user not in sudo group
 
-Instead of running the full script you can source `utils` in an interactive shell:
+## 📁  Structure
+
+```
+.
+├─ forgeup                 # main executable (flags, orchestration)
+├─ forgeup_lib.sh          # aggregator (sources lib/*.sh)
+├─ lib/
+│  ├─ logging.sh           # print_logo, log_info, log_error, ...
+│  ├─ core.sh              # can_sudo, is_installed, file_exists, fatal
+│  ├─ gh_install.sh        # install_gh_binary / install_gh_package
+│  ├─ installers.sh        # install_starship_prompt, install_nvim, ...
+│  ├─ apt.sh               # install_apt_packages
+│  ├─ services.sh          # enable_services
+│  ├─ vim.sh               # vim-plug + plugins
+│  ├─ tmux.sh              # tmux helpers
+│  └─ dotfiles.sh          # setup_dotfiles, stow_dotfiles
+├─ config/
+│  ├─ packages.conf        # APT_PACKAGES array
+│  ├─ services.conf        # SERVICES array
+│  └─ dotfiles.conf        # DOTFILES_TO_STOW array
+├─ VERSION
+├─ Makefile
+└─ README.md
+```
+
+
+## 🔌 Modular / Manual Usage
+
+Aggregator load (recommended, loads all modules in correct order):
 
 ```bash
-git clone https://github.com/sascha-kirch/linux-forgeup.git
-
-cd linux-forgeup
-. ./utils          # or: source utils
-
-install_starship_prompt v1.23.0
-install_eza
+# from any directory
+source /path/to/linux-forgeup/forgeup_lib.sh
+print_logo
+install_fzf
 install_ripgrep 14.1.1
-install_lazygit v0.55.1
+install_starship_prompt v1.23.0
 ```
 
-Ensure `$HOME/.local/bin` precedes PATH:
+Source specific modules (advanced, because dependencies to logging/core exist):
+
+```bash
+. lib/logging.sh
+. lib/core.sh
+. lib/gh_install.sh
+install_gh_binary "junegunn/fzf" v0.66.0 "fzf-0.66.0-linux_amd64" true
+```
+
+Ensure PATH:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"
 ```
 
-Persist this by adding to `~/.profile` (before sourcing `~/.bashrc`):
+Persist:
 
 ```bash
-# Ensure local bin tools are found early
-export PATH="$HOME/.local/bin:$PATH"
+grep -q '.local/bin' ~/.profile || echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.profile
 ```
 
-## Selecting Versions
+## 🙌 Install Wrapper
 
-All convenience installers accept an optional version argument. Examples:
+Use wrappers for common tools in [lib/installers.sh](lib/installers.sh):
+
+```bash
+source /path/to/linux-forgeup/forgeup_lib.sh
+# GitHub release installers with defaults:
+install_starship_prompt
+install_eza
+install_navi
+install_fzf
+install_ripgrep
+install_dust
+install_lazygit
+install_nvim
+
+# Other installers wrapping custom logic:
+install_rust
+uninstall_rust
+install_lazydocker
+install_zoxide
+install_ollama
+```
+
+GitHub install wrappers accept optional version argument:
 
 ```bash
 install_nvim v0.11.4
-install_fzf v0.66.0
 install_lazygit v0.55.1
+install_fzf v0.66.0
 ```
 
-If omitted, the internal default is used (see implementations in [utils](utils)).
+> [!TIP]
+> If version omitted the default inside [lib/installers.sh](lib/installers.sh) is used.
 
-## Dotfiles
+Local Install Logic:
 
-To only handle dotfiles:
+- Binaries go to: `$HOME/.local/bin/<name>`
+- Packages go to: `$HOME/.local/packages/<repo_subname>` then symlinked into `$HOME/.local/bin`
+- Uses GitHub release tarballs: `install_gh_binary` (direct binary), `install_gh_package` (extract + symlink)
+- Safe reinstallation via passing `true` internally (see wrappers)
+
+## 📦 APT Packages
+
+Edit [config/packages.conf](config/packages.conf):
 
 ```bash
-./run -d            # clones and stows those listed in dotfiles.conf
+APT_PACKAGES=(
+  htop
+  stow
+  tmux
+  git
+)
 ```
 
-Or manually:
+Run:
 
 ```bash
-. ./utils
+./forgeup -a
+```
+
+> [!WARNING]
+> Requires sudo.
+
+## 🔧 Dotfiles
+
+Configure sets in [config/dotfiles.conf](config/dotfiles.conf):
+
+```bash
+DOTFILES_TO_STOW=(tmux vim bash starship)
+```
+
+Run:
+
+```bash
+./forgeup -d
+```
+
+Manual:
+
+```bash
+source forgeup_lib.sh
 setup_dotfiles
-stow_dotfiles tmux vim bash
+stow_dotfiles tmux vim
 ```
 
-> clones my [dotfiles](https://github.com/sascha-kirch/dotfiles) repository for setting up dotfiles
+> [!NOTE]
+> For now it clones my own [sascha-kirch/dotfiles](https://github.com/sascha-kirch/dotfiles) repository for setting up dotfiles. You can modify `setup_dotfiles` in [lib/dotfiles.sh](lib/dotfiles.sh) to use your own repo.
 
-## Services
+## 👻 Services
 
-Add service names to [services.conf](services.conf):
+Add service names to [config/services.conf](config/services.conf):
 
 ```bash
 SERVICES=(
@@ -119,43 +214,57 @@ SERVICES=(
 Then run:
 
 ```bash
-./run -s
+./forgeup -s
 ```
 
-Requires sudo.
+Manual:
 
-## Local Install Logic
-
-- Binaries go to: `$HOME/.local/bin/<name>`
-- Packages go to: `$HOME/.local/packages/<repo_subname>` then symlinked into `$HOME/.local/bin`
-- Uses GitHub release tarballs: `install_gh_binary` (direct binary), `install_gh_package` (extract + symlink)
-- Safe reinstallation via passing `true` internally (see wrappers)
-
-## Logging
-
-All actions produce time-stamped colored output:
-- INFO / WARNING / ERROR / CONFIG
-
-Example:
-
-```
-12:34:56 [INFO][FORGE-UP] Installed version 'v1.23.0' of repo 'starship/starship' ...
+```bash
+source forgeup_lib.sh
+enable_services ssh cron
 ```
 
-## Known Limitations / TODO
+> [!WARNING]
+> Requires sudo.
 
-- Split `utils` into modular shell files.
+
+## 🔍 Logging Example
+
+```
+12:34:56 [INFO][FORGE-UP] Installing version 'v1.23.0' of repo 'starship/starship' ...
+```
+
+Levels: INFO / WARNING / ERROR / CONFIG
+
+## 🛤 Known Limitations / TODO
+
 - Add checksum verification for downloaded archives.
 - Add uninstall functions for each tool.
 - Improve version auto-discovery (currently manual defaults).
-- only supports apt package manager and systemd for services.
+- Add support for other package managers and and non-systemd services.
 - currently only GitHub releases as source for local installs.
 - uses my own dotfiles repo; make this configurable.
 
-## Troubleshooting
+## 🧯 Troubleshooting
 
 | Issue | Cause | Fix |
 |-------|-------|-----|
 | Tool not found after install | PATH not updated | Add `export PATH="$HOME/.local/bin:$PATH"` to .profile |
 | APT steps skipped | No sudo group membership | Run only `-o` (local installs) or gain sudo |
 | Neovim old version still used | `/usr/bin/nvim` shadowing | Remove system neovim (handled automatically in `install_nvim`) |
+
+## 📄 Version
+
+Current version: [VERSION](VERSION)
+
+Exported as `FORGEUP_VERSION` when sourcing [forgeup_lib.sh](forgeup_lib.sh)
+
+## 🤝 Contributing
+
+1. Open issue / fork
+2. Add/change functions in appropriate `lib/*.sh`
+3. Keep wrappers idempotent
+4. Run `make lint
+
+---
+Happy forging 🔧

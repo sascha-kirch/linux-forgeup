@@ -10,11 +10,11 @@ Usage: $0 [OPTIONS]
 Setup and configure a Linux system with various options.
 
 Options:
-    -u, --update-system    Update and upgrade the system packages. [Requires sudo].
-    -a, --apt-packages     Install APT packages listed in packages.conf. [Requires sudo].
+    -u, --update-system    Update and upgrade the system packages with apt. [Requires sudo].
+    -a, --apt-packages     Install APT packages listed in config/packages.conf. [Requires sudo].
     -o, --other-packages   Install other packages/tools.
-    -s, --enable-services  Enable and start services listed in services.conf. [Requires sudo].
-    -d, --setup-dotfiles   Setup and stow dotfiles listed in dotfiles from https://github.com/sascha-kirch/dotfiles.
+    -s, --enable-services  Enable and start services listed in config/services.conf. [Requires sudo].
+    -d, --setup-dotfiles   Setup and stow dotfiles listed in config/dotfiles.conf from https://github.com/sascha-kirch/dotfiles.
     -h, --help             Display this help message.
 
 Examples:

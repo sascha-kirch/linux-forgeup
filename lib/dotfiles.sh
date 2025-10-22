@@ -6,11 +6,8 @@
 setup_dotfiles() {
     log_info "Setting up dotfiles..."
 
-    DOTFILES_REPO_NAME="dotfiles"
-    DOTFILES_REPO="https://github.com/sascha-kirch/$DOTFILES_REPO_NAME.git"
-    DOTFILES_DIR="$HOME/$DOTFILES_REPO_NAME"
-
-    source dotfiles.conf
+    local dotfiles_repo="https://github.com/sascha-kirch/dotfiles.git"
+    local dotfiles_dir="$HOME/dotfiles"
 
     if ! is_installed stow; then
         log_error "GNU Stow is not installed, install it first"
@@ -18,10 +15,10 @@ setup_dotfiles() {
     fi
 
     # Check if the repository already exists
-    if [ -d "$DOTFILES_DIR" ]; then
-        log_warning "Directory '$DOTFILES_DIR' already exists. Skipping clone"
+    if [ -d "$dotfiles_dir" ]; then
+        log_warning "Directory '$dotfiles_dir' already exists. Skipping clone"
     else
-        git clone "$DOTFILES_REPO" "$DOTFILES_DIR"
+        git clone "$dotfiles_repo" "$dotfiles_dir"
     fi
 
     # Check if the clone was successful
@@ -43,10 +40,10 @@ stow_dotfiles() {
     if [ ${#dotfiles[@]} -ne 0 ]; then
         log_info "Stowing dotfiles: ${dotfiles[*]}"
         stow -R "${dotfiles[@]}"
+        log_info "Dotfiles stowed successfully."
     else
         log_warning "No dotfiles to be stowed."
     fi
 
     popd
-    log_info "Dotfiles stowed successfully."
 }
