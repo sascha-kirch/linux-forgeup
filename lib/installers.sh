@@ -107,6 +107,20 @@ install_zoxide() {
     # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
 }
 
+install_uv() {
+
+    local install_dir="$HOME/.local/bin/uv"
+
+    if [ -f "$install_dir" ]; then
+        log_warning "uv is already installed in $install_dir"
+    else
+        log_info "Installing uv..."
+        sh -c "$(curl -fsSL https://astral.sh/uv/install.sh)"
+    fi
+
+    # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
+}
+
 install_ollama() {
     log_info "Installing/Updating ollama..."
 
