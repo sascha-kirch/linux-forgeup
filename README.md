@@ -133,6 +133,8 @@ uninstall_rust
 install_lazydocker
 install_zoxide
 install_ollama
+install_claude
+install_uv
 ```
 
 GitHub install wrappers accept optional version argument:

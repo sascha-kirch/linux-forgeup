@@ -107,6 +107,20 @@ install_zoxide() {
     # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
 }
 
+install_claude() {
+
+    local install_dir="$HOME/.local/bin/claude"
+
+    if [ -f "$install_dir" ]; then
+        log_warning "claude is already installed in $install_dir"
+    else
+        log_info "Installing claude..."
+        bash -c "$(curl -fsSL https://claude.ai/install.sh)"
+    fi
+
+    # Note it is installed into .local/bin so make sure it is added to the $PATH. e.g. inside of ~/.profile
+}
+
 install_uv() {
 
     local install_dir="$HOME/.local/bin/uv"
